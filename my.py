@@ -5,7 +5,7 @@ import requests
 import base64
 
 # ==== 설정 ====
-API_KEY = "여기에_발급받은_OpenRouter_API_KEY_붙여넣기"
+API_KEY = "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"
 MODEL_IMAGE_DESC = "moonshotai/kimi-vl-a3b-thinking:free"
 MODEL_TRANSLATE = "openai/gpt-3.5-turbo"
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
