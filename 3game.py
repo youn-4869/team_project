@@ -45,6 +45,8 @@ level = 1
 max_level = 5
 selected_words = []
 start_time = 0
+countdown_seconds = 10
+countdown_id = None
 
 # 🌟 단어 보여주기
 def show_words():
@@ -58,10 +60,33 @@ def show_words():
 # ❓ 단어 가리기
 def hide_words():
     word_label.config(text="❓ " * level)
+    start_countdown(countdown_seconds)
+
+# ⏱️ 시간 타임머 시작
+def start_countdown(seconds):
+    global countdown_id
+    timer_label.config(text=f"남은 시간: {seconds} 초")
+    if seconds > 0:
+        countdown_id = root.after(1000, start_countdown, seconds - 1)
+    else:
+        handle_timeout()
+
+# ❌ 시간 마감 처리
+def handle_timeout():
+    stats = load_stats()
+    stats["plays"] += 1
+    stats["incorrect"] += 1
+    stats["last_play"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    save_stats(stats)
+    messagebox.showinfo("시간 초과!", f"{countdown_seconds}초 초과!")
+    reset_game()
 
 # ✅ 정답 확인 및 시간 체크
 def check_answer():
-    global level, start_time
+    global level, start_time, countdown_id
+    if countdown_id:
+        root.after_cancel(countdown_id)
+
     user_input = entry.get().strip().split()
     end_time = time.time()
     elapsed = round(end_time - start_time, 2)
@@ -70,18 +95,11 @@ def check_answer():
     stats["plays"] += 1
     stats["last_play"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    if elapsed > 10:
-        messagebox.showinfo("시간 초과!", f"10초 초과! ({elapsed}초 소요됨)\n1단계부터 다시 시작해요~")
-        stats["incorrect"] += 1
-        save_stats(stats)
-        reset_game()
-        return
-
     if user_input == selected_words:
         stats["correct"] += 1
         if stats["best_time"] is None or elapsed < stats["best_time"]:
             stats["best_time"] = elapsed
-            message = f"🎉 정답입니다! ({elapsed}초)\n🔥 최고 기록 갱신!"
+            message = f"🎉 정답입니다! ({elapsed}초)\n🔥 최고 기본 기록 갱신!"
         else:
             message = f"🎉 정답입니다! ({elapsed}초)"
 
@@ -90,12 +108,12 @@ def check_answer():
         if level < max_level:
             level_up(message)
         else:
-            messagebox.showinfo("🎉 완벽!", f"5단계까지 모두 성공했어요! 최고!\n총 시도: {stats['plays']}번, 정답률: {stats['correct']}/{stats['plays']}")
+            messagebox.showinfo("🎉 완료!", f"5단계까지 모두 성공했어요! \n총 시도: {stats['plays']} 번, 정답률: {stats['correct']}/{stats['plays']}")
             reset_game()
     else:
         stats["incorrect"] += 1
         save_stats(stats)
-        messagebox.showinfo("틀렸어요!", f"정답은: {' '.join(selected_words)}\n{elapsed}초 소요됨\n1단계부터 다시 시작해요~")
+        messagebox.showinfo("틀리어요!", f"정답은: {' '.join(selected_words)}\n{elapsed}초 소용됨\n1단계부터 다시 시작해요~")
         reset_game()
 
 # 🔼 다음 단계로
@@ -107,23 +125,30 @@ def level_up(msg):
 
 # ♻️ 게임 리셋
 def reset_game():
-    global level
+    global level, countdown_id
     level = 1
+    if countdown_id:
+        root.after_cancel(countdown_id)
+        countdown_id = None
+    timer_label.config(text="")
     show_words()
 
 # 🪟 GUI 구성
 root = tk.Tk()
-root.title("🧠 단계별 단어 기억 게임")
-root.geometry("550x400")
+root.title("🧐 단계별 단어 기억 게임")
+root.geometry("550x420")
 root.configure(bg=BG_COLOR)
 
 title = tk.Label(root, text="단계별 단어 기억 게임", font=("Helvetica", 20, "bold"),
                  bg=BG_COLOR, fg=TEXT_COLOR)
-title.pack(pady=30)
+title.pack(pady=10)
 
 word_label = tk.Label(root, text="", font=("Helvetica", 28, "bold"),
                       bg=BG_COLOR, fg=TEXT_COLOR)
-word_label.pack(pady=20)
+word_label.pack(pady=10)
+
+timer_label = tk.Label(root, text="", font=("Helvetica", 16), bg=BG_COLOR, fg="red")
+timer_label.pack(pady=5)
 
 entry = tk.Entry(root, font=("Helvetica", 18), justify="center", bg=INPUT_COLOR)
 entry.pack(pady=10)
@@ -134,6 +159,6 @@ check_btn.pack(pady=10)
 
 start_btn = tk.Button(root, text="게임 시작", font=("Helvetica", 16),
                       bg="#BA55D3", fg="white", command=reset_game)
-start_btn.pack(pady=20)
+start_btn.pack(pady=10)
 
 root.mainloop()
