@@ -132,7 +132,8 @@ def level_up(msg):
     global level
     level += 1
     messagebox.showinfo("정답!", f"{msg}{level}단계로 넘어갑니다~")
-    entry.delete(0, tk.END)  # 확인 후 입력창 비우기
+    entry.delete(0, tk.END)
+    entry.config(state="disabled")  # 확인 후 입력창 비우기
     show_words()
 
 # ♻️ 게임 리셋
@@ -149,31 +150,70 @@ def reset_game():
     start_btn.pack(pady=10)
     show_words()
 
-# 🪟 GUI 구성
-root = tk.Tk()
-root.title("🧐 단계별 단어 기억 게임")
-root.geometry("550x420")
-root.configure(bg=BG_COLOR)
+# 🪟 GUI 구성 → 메인 게임 UI는 함수로 옮김
 
-title = tk.Label(root, text="단계별 단어 기억 게임", font=("Helvetica", 20, "bold"),
-                 bg=BG_COLOR, fg=TEXT_COLOR)
-title.pack(pady=10)
+def start_main_ui():
+    global root, title, word_label, timer_label, entry, check_btn, start_btn
 
-word_label = tk.Label(root, text="", font=("Helvetica", 28, "bold"),
-                      bg=BG_COLOR, fg=TEXT_COLOR)
-word_label.pack(pady=10)
+    root = tk.Tk()
+    root.title("🧐 단계별 단어 기억 게임")
+    root.geometry("550x420")
+    root.configure(bg=BG_COLOR)
 
-timer_label = tk.Label(root, text="", font=("Helvetica", 16), bg=BG_COLOR, fg="red")
-timer_label.pack(pady=5)
+    title = tk.Label(root, text="단계별 단어 기억 게임", font=("Helvetica", 20, "bold"),
+                     bg=BG_COLOR, fg=TEXT_COLOR)
+    title.pack(pady=10)
 
-entry = tk.Entry(root, font=("Helvetica", 18), justify="center", bg=INPUT_COLOR, state="disabled")
-entry.pack(pady=10)
+    word_label = tk.Label(root, text="", font=("Helvetica", 28, "bold"),
+                          bg=BG_COLOR, fg=TEXT_COLOR)
+    word_label.pack(pady=10)
 
-check_btn = tk.Button(root, text="입력 완료", font=("Helvetica", 16),
-                      bg=BUTTON_COLOR, fg="white", command=check_answer)
+    timer_label = tk.Label(root, text="", font=("Helvetica", 16), bg=BG_COLOR, fg="red")
+    timer_label.pack(pady=5)
 
-start_btn = tk.Button(root, text="게임 시작", font=("Helvetica", 16),
-                      bg="#BA55D3", fg="white", command=reset_game)
-start_btn.pack(pady=10)
+    entry = tk.Entry(root, font=("Helvetica", 18), justify="center", bg=INPUT_COLOR, state="disabled")
+    entry.pack(pady=10)
 
-root.mainloop()
+    check_btn = tk.Button(root, text="입력 완료", font=("Helvetica", 16),
+                          bg=BUTTON_COLOR, fg="white", command=check_answer)
+
+    start_btn = tk.Button(root, text="게임 시작", font=("Helvetica", 16),
+                          bg="#BA55D3", fg="white", command=reset_game)
+    start_btn.pack(pady=10)
+
+    reset_game()  # 시작하자마자 게임 자동 시작
+    root.mainloop()
+
+# 🪧 게임 시작 전 규칙 안내 창 생성
+intro = tk.Tk()
+intro.title("게임 규칙 안내")
+intro.geometry("500x350")
+intro.configure(bg=BG_COLOR)
+
+rules = (
+     """    🧠 게임 규칙 안내 🧠
+
+    
+    1. 단어들이 잠깐 나타난 후 사라집니다.
+
+    2. 사라진 단어를 순서대로 입력하세요.
+
+    3. 단계가 오를수록 단어 수와 시간 제한이 증가합니다.
+
+    4. 정답이면 다음 단계, 틀리면 처음부터!
+
+    준비되셨다면 아래 버튼을 눌러 시작하세요."""
+)
+
+rule_label = tk.Label(intro, text=rules, font=("Helvetica", 12), justify="left",
+                      bg=BG_COLOR, fg=TEXT_COLOR, padx=20, pady=20)
+rule_label.pack()
+
+def launch_game():
+    intro.destroy()
+    start_main_ui()
+
+start_button = tk.Button(intro, text="게임 시작하기", font=("Helvetica", 14), bg=BUTTON_COLOR, fg="white", command=launch_game)
+start_button.pack(pady=10)
+
+intro.mainloop()
