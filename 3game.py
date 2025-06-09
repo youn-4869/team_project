@@ -48,18 +48,24 @@ start_time = 0
 countdown_seconds = 10
 countdown_id = None
 
-# 🌟 단어 보여주기
+# 호출 버튼 가능 발견 모드 게임 시작 구현보다
 def show_words():
     global selected_words, start_time
     selected_words = random.sample(all_words, level)
     word_label.config(text="  ".join(selected_words))
     entry.delete(0, tk.END)
+    entry.config(state="disabled")
+    check_btn.pack_forget()
     root.after(2000, hide_words)
     start_time = time.time()
+    start_btn.pack_forget()
 
 # ❓ 단어 가리기
 def hide_words():
+    entry.delete(0, tk.END)  # 입력창 초기화
     word_label.config(text="❓ " * level)
+    entry.config(state="normal")
+    check_btn.pack(pady=10)
     start_countdown(countdown_seconds)
 
 # ⏱️ 시간 타임머 시작
@@ -87,9 +93,12 @@ def check_answer():
     if countdown_id:
         root.after_cancel(countdown_id)
 
+    entry.config(state="disabled")
+    check_btn.pack_forget()
+
     user_input = entry.get().strip().split()
     end_time = time.time()
-    elapsed = round(end_time - start_time, 2)
+    elapsed = round(end_time - start_time - 3, 2)
 
     stats = load_stats()
     stats["plays"] += 1
@@ -113,14 +122,15 @@ def check_answer():
     else:
         stats["incorrect"] += 1
         save_stats(stats)
-        messagebox.showinfo("틀리어요!", f"정답은: {' '.join(selected_words)}\n{elapsed}초 소용됨\n1단계부터 다시 시작해요~")
+        messagebox.showinfo("틀렸어요ㅜㅜ", f"정답은: {' '.join(selected_words)}\n{elapsed}초 소요됨\n1단계부터 다시 시작해요~")
         reset_game()
 
 # 🔼 다음 단계로
 def level_up(msg):
     global level
     level += 1
-    messagebox.showinfo("정답!", f"{msg}\n{level}단계로 넘어갑니다~")
+    messagebox.showinfo("정답!", f"{msg}{level}단계로 넘어갑니다~")
+    entry.delete(0, tk.END)  # 확인 후 입력창 비우기
     show_words()
 
 # ♻️ 게임 리셋
@@ -131,6 +141,10 @@ def reset_game():
         root.after_cancel(countdown_id)
         countdown_id = None
     timer_label.config(text="")
+    entry.delete(0, tk.END)  # 입력창 초기화
+    entry.config(state="disabled")
+    check_btn.pack_forget()
+    start_btn.pack(pady=10)
     show_words()
 
 # 🪟 GUI 구성
@@ -150,12 +164,11 @@ word_label.pack(pady=10)
 timer_label = tk.Label(root, text="", font=("Helvetica", 16), bg=BG_COLOR, fg="red")
 timer_label.pack(pady=5)
 
-entry = tk.Entry(root, font=("Helvetica", 18), justify="center", bg=INPUT_COLOR)
+entry = tk.Entry(root, font=("Helvetica", 18), justify="center", bg=INPUT_COLOR, state="disabled")
 entry.pack(pady=10)
 
 check_btn = tk.Button(root, text="입력 완료", font=("Helvetica", 16),
                       bg=BUTTON_COLOR, fg="white", command=check_answer)
-check_btn.pack(pady=10)
 
 start_btn = tk.Button(root, text="게임 시작", font=("Helvetica", 16),
                       bg="#BA55D3", fg="white", command=reset_game)
