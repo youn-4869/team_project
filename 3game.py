@@ -51,22 +51,24 @@ countdown_id = None
 # 호출 버튼 가능 발견 모드 게임 시작 구현보다
 def show_words():
     global selected_words, start_time
+    show_time = 2000 + (level - 1) * 1000  # 단계별로 1초씩 증가
     selected_words = random.sample(all_words, level)
     word_label.config(text="  ".join(selected_words))
     entry.delete(0, tk.END)
     entry.config(state="disabled")
     check_btn.pack_forget()
-    root.after(2000, hide_words)
+    root.after(show_time, hide_words)
     start_time = time.time()
     start_btn.pack_forget()
 
 # ❓ 단어 가리기
 def hide_words():
-    entry.delete(0, tk.END)  # 입력창 초기화
+    entry.delete(0, tk.END)
+    input_time = countdown_seconds + (level - 1) * 2  # 단계별로 2초씩 증가
     word_label.config(text="❓ " * level)
     entry.config(state="normal")
     check_btn.pack(pady=10)
-    start_countdown(countdown_seconds)
+    start_countdown(input_time)
 
 # ⏱️ 시간 타임머 시작
 def start_countdown(seconds):
